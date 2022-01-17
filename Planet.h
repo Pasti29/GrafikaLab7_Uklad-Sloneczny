@@ -2,8 +2,19 @@
 
 #define _USE_MATH_DEFINES
 #include <cmath>
+#include <string>
+#include "Textures.h"
 
 class Planet {
+public:
+	// Zmienne dla obrazu tekstury
+	struct TEXTURE {
+		std::string path;
+		GLbyte* pBytes;
+		GLint ImWidth, ImHeight, ImComponents;
+		GLenum ImFormat;
+	};
+
 private:
 	double angle;
 	int distanceFromCenter;
@@ -12,13 +23,17 @@ private:
 	const double y = 0;
 	double z = 0;
 	int daysInYear;
-	// byte* texture;
-	// TODO Tekstury
+	TEXTURE texture;
 
 public:
-	Planet(double radius);
-	Planet(double radius, int distanceFromCenter, int daysInYear);
+	Planet(double radius, std::string path);
+	Planet(double radius, std::string path, int distanceFromCenter, int daysInYear);
 
+private:
+	void loadTexture();
+
+public:
+	void showTexture();
 	void setAngle(int currentDay);
 	void setX();
 	void setZ();

@@ -2,7 +2,9 @@
 #include <gl/gl.h>
 #include <gl/glut.h>
 #include <iostream>
+#include <string>
 #include "Planet.h"
+#include "Textures.h"
 
 static float pix2angle;     // przelicznik pikseli na stopnie
 
@@ -19,7 +21,7 @@ static int delta_x = 0; // różnica pomiędzy pozycją bieżącą i poprzednią
 static int y_pos_old = 0; // poprzednia pozycja kursora myszy
 static int delta_y = 0; // różnica pomiędzy pozycją bieżącą i poprzednią kursora myszy
 
-static float viewer[] = { 0, 500, 0 };
+static float viewer[] = { 0, 200, 1000 };
 static float lookAtPoint[] = { 0, 0, 0 };
 static float azymuth = 0;
 static float elevation = 0;
@@ -32,20 +34,21 @@ int distanceFromCenter[] = { 57, 108, 149, 227, 778, 1433, 2872, 4498 };
 double radius[] = { 4.87, 12.1, 12.76, 6.79, 71, 60, 25, 24, 30 };
 int daysInYear[] = { 88, 224, 365, 686, 4333, 10756, 30707, 60223 };
 
-Planet sun(radius[8]);
+
+
+Planet sun(radius[8], "Tekstury\\sun.tga");
 Planet planets[] = {
-	Planet(radius[0], distanceFromCenter[0], daysInYear[0]),
-	Planet(radius[1], distanceFromCenter[1], daysInYear[1]),
-	Planet(radius[2], distanceFromCenter[2], daysInYear[2]),
-	Planet(radius[3], distanceFromCenter[3], daysInYear[3]),
-	Planet(radius[4], distanceFromCenter[4], daysInYear[4]),
-	Planet(radius[5], distanceFromCenter[5], daysInYear[5]),
-	Planet(radius[6], distanceFromCenter[6], daysInYear[6]),
-	Planet(radius[7], distanceFromCenter[7], daysInYear[7])
+	Planet(radius[0], "Tekstury\\mercury.tga", distanceFromCenter[0], daysInYear[0]),
+	Planet(radius[1], "Tekstury\\venus.tga", distanceFromCenter[1], daysInYear[1]),
+	Planet(radius[2], "Tekstury\\earth.tga", distanceFromCenter[2], daysInYear[2]),
+	Planet(radius[3], "Tekstury\\mars.tga", distanceFromCenter[3], daysInYear[3]),
+	Planet(radius[4], "Tekstury\\jupiter.tga", distanceFromCenter[4], daysInYear[4]),
+	Planet(radius[5], "Tekstury\\saturn.tga", distanceFromCenter[5], daysInYear[5]),
+	Planet(radius[6], "Tekstury\\uranus.tga", distanceFromCenter[6], daysInYear[6]),
+	Planet(radius[7], "Tekstury\\neptune.tga", distanceFromCenter[7], daysInYear[7])
 };
 
-
-int segments = 10000;
+int segments = 1000;
 
 void zoom(bool zoomed) {
 	float x = (lookAtPoint[0] - viewer[0]);
@@ -65,13 +68,15 @@ void zoom(bool zoomed) {
 }
 
 void solarSystem() {
+	sun.showTexture();
 	glutSolidSphere(sun.getRadius(), segments, segments);
-	glColor3f(1.0, 1.0, 1.0);
+
 	for (Planet planet : planets) {
 		planet.setAngle(day);
 		planet.setX();
 		planet.setZ();
 		glTranslatef(planet.getX(), 0, planet.getZ());
+		planet.showTexture();
 		glutSolidSphere(planet.getRadius(), segments, segments);
 		glTranslatef(-planet.getX(), 0, -planet.getZ());
 	}
@@ -83,11 +88,12 @@ void renderScene() {
 	glLoadIdentity();
 
 	gluLookAt(viewer[0], viewer[1], viewer[2], lookAtPoint[0], lookAtPoint[1], lookAtPoint[2], 0.0, 1.0, 0.0);
-	
+
 	if (status == 2) {
-		zoom(delta_y > 0);
-	}
-	if (status == 1) {
+		if (delta_y != 0) {
+			zoom(delta_y > 0);
+		}
+	}else if (status == 1) {
 		azymuth += delta_x * pix2angle * 0.01;
 		elevation -= delta_y * pix2angle * 0.01;
 		if (sin(elevation) >= 0.99) {
@@ -100,10 +106,6 @@ void renderScene() {
 	lookAtPoint[0] = 10 * cos(azymuth) * cos(elevation) + viewer[0];
 	lookAtPoint[1] = 10 * sin(elevation) + viewer[1];
 	lookAtPoint[2] = 10 * sin(azymuth) * cos(elevation) + viewer[2];
-
-	std::cout << viewer[0] << "\n";
-	std::cout << viewer[1] << "\n";
-	std::cout << viewer[2] << "\n";
 
 	solarSystem();
 
@@ -138,6 +140,11 @@ void mouse(int btn, int state, int x, int y) {
 		status = 2;
 	} else {
 		status = 0;          // nie został wciśnięty żaden klawisz
+	}
+
+	if ((btn == GLUT_LEFT_BUTTON && state == GLUT_UP) || (btn == GLUT_RIGHT_BUTTON && state == GLUT_UP)) {
+		delta_x = 0;
+		delta_y = 0;
 	}
 
 	renderScene();
@@ -206,6 +213,23 @@ void changeSize(GLsizei horizontal, GLsizei vertical) {
 
 void myInit() {
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+	//          --<<TEKSTUROWANIE>>--
+
+	// Teksturowanie będzie prowadzone tylko po jednej stronie ściany
+	glEnable(GL_CULL_FACE);
+
+	glCullFace(GL_BACK);
+
+	// Włączenie mechanizmu teksturowania
+	glEnable(GL_TEXTURE_2D);
+
+	// Ustalenie trybu teksturowania
+	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+	// Określenie sposobu nakładania tekstur
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	//renderScene();
 }
