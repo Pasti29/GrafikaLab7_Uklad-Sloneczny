@@ -1,10 +1,13 @@
-﻿#include <windows.h>
+﻿#define _USE_MATH_DEFINES
+
+#include <windows.h>
 #include <gl/gl.h>
 #include <gl/glut.h>
 #include <iostream>
 #include <string>
 #include "Planet.h"
 #include "Textures.h"
+#include <cmath>
 
 static float pix2angle;     // przelicznik pikseli na stopnie
 
@@ -17,22 +20,19 @@ static int status = 0;
 static int x_pos_old = 0; // poprzednia pozycja kursora myszy
 static int delta_x = 0; // różnica pomiędzy pozycją bieżącą i poprzednią kursora myszy
 
-
 static int y_pos_old = 0; // poprzednia pozycja kursora myszy
 static int delta_y = 0; // różnica pomiędzy pozycją bieżącą i poprzednią kursora myszy
 
-static float viewer[] = { 0, 200, 1000 };
-static float lookAtPoint[] = { 0, 0, 0 };
-static float azymuth = 0;
-static float elevation = 0;
-static float azymuth2 = 0;
-static float elevation2 = 0;
+static float viewer[] = { 158'932, 94'023.4, 302'876 };
+static float lookAtPoint[] = { 158'930, 94'022.4, 302'866 };
+static float azymuth = -1.7892;
+static float elevation = -0.108;
 
-int day = 0;
+double day = 0;
 
-int distanceFromCenter[] = { 57, 108, 149, 227, 778, 1433, 2872, 4498 };
-double radius[] = { 4.87, 12.1, 12.76, 6.79, 71, 60, 25, 24, 30 };
-int daysInYear[] = { 88, 224, 365, 686, 4333, 10756, 30707, 60223 };
+int distanceFromCenter[] = { 57'900, 108'200, 149'600, 227'900, 778'600, 1'433'500, 2'872'500, 4'498'100 };
+double radius[] = { 2'439.5, 6'052.0, 6'378.0, 3'396.0, 71'492.0, 60'268.0, 25'559.0, 24'794.0, 34'825.0 };
+int daysInYear[] = { 88, 224, 365, 686, 4'333, 10'756, 30'707, 60'223 };
 
 
 
@@ -51,9 +51,9 @@ Planet planets[] = {
 int segments = 1000;
 
 void zoom(bool zoomed) {
-	float x = (lookAtPoint[0] - viewer[0]);
-	float y = (lookAtPoint[1] - viewer[1]);
-	float z = (lookAtPoint[2] - viewer[2]);
+	float x = 200 * (lookAtPoint[0] - viewer[0]);
+	float y = 200 * (lookAtPoint[1] - viewer[1]);
+	float z = 200 * (lookAtPoint[2] - viewer[2]);
 	if (zoomed) {
 		x *= -1;
 		y *= -1;
@@ -67,17 +67,39 @@ void zoom(bool zoomed) {
 	lookAtPoint[2] += z;
 }
 
+void drawOrbit(Planet planet) {
+	glDisable(GL_TEXTURE_2D);
+	glColor3f(0.6, 0.6, 0.6);
+	glBegin(GL_LINE_LOOP);
+	for (int i = 0; i < 360; i++) {
+		float angle = 1.0 * float(i) / float(360);
+		float x = planet.getDistanceFromCenter() * cos(2 * M_PI * angle);
+		float y = planet.getDistanceFromCenter() * sin(2 * M_PI * angle);
+
+		glVertex3f(x, 0, y);
+	}
+	glEnd();
+	glEnable(GL_TEXTURE_2D);
+	glColor3f(1.0, 1.0, 1.0);
+}
+
 void solarSystem() {
 	sun.showTexture();
-	glutSolidSphere(sun.getRadius(), segments, segments);
+	GLUquadricObj* quadricObj = gluNewQuadric();
+	gluQuadricDrawStyle(quadricObj, GLU_FILL);
+	gluQuadricNormals(quadricObj, GLU_SMOOTH);
+	gluQuadricTexture(quadricObj, GL_TRUE);
+	gluSphere(quadricObj, sun.getRadius(), 20, 20);
+	
 
 	for (Planet planet : planets) {
+		drawOrbit(planet);
 		planet.setAngle(day);
 		planet.setX();
 		planet.setZ();
 		glTranslatef(planet.getX(), 0, planet.getZ());
 		planet.showTexture();
-		glutSolidSphere(planet.getRadius(), segments, segments);
+		gluSphere(quadricObj, planet.getRadius(), 20, 20);
 		glTranslatef(-planet.getX(), 0, -planet.getZ());
 	}
 }
@@ -113,7 +135,7 @@ void renderScene() {
 }
 
 void changeDay() {
-	day++;
+	day += 0.1;
 	Sleep(1);
 	renderScene();
 
@@ -134,9 +156,10 @@ void mouse(int btn, int state, int x, int y) {
 	if (btn == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
 		x_pos_old = x;         // przypisanie aktualnie odczytanej pozycji kursora jako pozycji poprzedniej
 		y_pos_old = y;
-		status = 1;          // wciśnięty został lewy klawisz myszy
+		status = 1;
 	} else if (btn == GLUT_RIGHT_BUTTON && state == GLUT_DOWN) {
 		y_pos_old = y;
+		//y_pos_old *= 100;
 		status = 2;
 	} else {
 		status = 0;          // nie został wciśnięty żaden klawisz
@@ -153,12 +176,14 @@ void mouse(int btn, int state, int x, int y) {
 // Funkcja obsługująca działanie programu za pomocą klawiszy klawiatury
 void keys(unsigned char key, int x, int y) {
 	if (key == 'r') {
-		viewer[0] = 0;
-		viewer[1] = 500;
-		viewer[2] = 0;
-		lookAtPoint[0] = 0;
-		lookAtPoint[1] = 0;
-		lookAtPoint[2] = 0;
+		viewer[0] = 158'932;
+		viewer[1] = 94'023.4;
+		viewer[2] = 302'876;
+		lookAtPoint[0] = 158'930;
+		lookAtPoint[1] = 94'022.4;
+		lookAtPoint[2] = 302'866;
+		azymuth = -1.7892;
+		elevation = -0.108;
 	}
 
 	if (key == (char)27) exit(0);
@@ -193,7 +218,7 @@ void changeSize(GLsizei horizontal, GLsizei vertical) {
 	glLoadIdentity();
 	// Czyszczenie macierzy bieżącej
 
-	gluPerspective(70, 1.6, 1.0, 100000.0);
+	gluPerspective(70, 1.6, 1.0, 10'000'000.0);
 
 	if (horizontal <= 1.6 * vertical)
 		glViewport(0, (vertical - horizontal / 1.6) / 2, 1.6 * vertical, vertical);
@@ -228,8 +253,10 @@ void myInit() {
 	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
 	// Określenie sposobu nakładania tekstur
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 	//renderScene();
 }

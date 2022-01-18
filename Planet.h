@@ -29,15 +29,12 @@ public:
 	Planet(double radius, std::string path);
 	Planet(double radius, std::string path, int distanceFromCenter, int daysInYear);
 
-private:
-	void loadTexture();
-
-public:
 	void showTexture();
-	void setAngle(int currentDay);
+	void setAngle(double currentDay);
 	void setX();
 	void setZ();
 	double getRadius();
+	int getDistanceFromCenter();
 	double getX();
 	double getZ();
 };
