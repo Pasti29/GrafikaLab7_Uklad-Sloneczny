@@ -1,4 +1,28 @@
-﻿#define _USE_MATH_DEFINES
+﻿//*********************************************************************
+//
+//  PLIK ŹRÓDŁOWY:		Main.cpp
+//
+//  OPIS:				Program do Laboratorium nr 7 rysujący na
+//						ekranie układ słoneczny wprawiony w ruch,
+//                      po którym można się poruszać.
+//
+//  AUTOR:				Karol Pastewski, 252798@student.edu.pl
+//
+//  DATA
+//	MODYFIKACJI:        24.01.2021r.
+//
+//  PLATFORMA:			System operacyjny:  Microsoft Windows 11
+//						Środowisko:         Microsoft Visual 2022
+//
+//  MATERIAŁY			Dokumentacja OpenGL
+//	ŹRÓDŁOWE:			Dokumentacja GLUT
+//						www.zsk.ict.pwr.wroc.pl
+//
+//  UŻYTE BIBLIOTEKI	cmath — obsługuje matematyczne wzory i stałe
+//  NIESTANDARDOWE
+//
+//*********************************************************************
+#define _USE_MATH_DEFINES
 
 #include <windows.h>
 #include <gl/gl.h>
@@ -82,21 +106,29 @@ void drawOrbit(Planet planet) {
 }
 
 void solarSystem() {
+	GLfloat mat_emission[] = { 0.4, 0.4, 0.4, 1.0 };
+	GLfloat mat_emission_zero[] = { 0.0, 0.0, 0.0, 0.0 };
+	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, mat_emission);
 	sun.showTexture();
 	GLUquadricObj* quadricObj = gluNewQuadric();
 	gluQuadricDrawStyle(quadricObj, GLU_FILL);
 	gluQuadricNormals(quadricObj, GLU_SMOOTH);
 	gluQuadricTexture(quadricObj, GL_TRUE);
 	gluSphere(quadricObj, sun.getRadius(), 20, 20);
-	
+
 
 	for (Planet planet : planets) {
+		glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, mat_emission);
 		drawOrbit(planet);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, mat_emission_zero);
 		planet.setAngle(day);
 		planet.setX();
 		planet.setZ();
 		glTranslatef(planet.getX(), 0, planet.getZ());
 		planet.showTexture();
+		gluQuadricDrawStyle(quadricObj, GLU_FILL);
+		gluQuadricNormals(quadricObj, GLU_SMOOTH);
+		gluQuadricTexture(quadricObj, GL_TRUE);
 		gluSphere(quadricObj, planet.getRadius(), 20, 20);
 		glTranslatef(-planet.getX(), 0, -planet.getZ());
 	}
@@ -242,19 +274,19 @@ void myInit() {
 	/*************************************************************************************/
 // Definicja materiału, z jakiego zrobiony jest obiekt
 
-	GLfloat mat_ambient[] = { 0.1, 0.1, 0.1, 1.0 };
+	GLfloat mat_ambient[] = { 0.2, 0.2, 0.2, 0.2 };
 	// współczynniki ka =[kar,kag,kab] dla światła otoczenia
 
 	GLfloat mat_diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
 	// współczynniki kd =[kdr,kdg,kdb] światła rozproszonego
 
-	GLfloat mat_specular[] = { 0.1, 0.1, 0.0, 0.1 };
+	GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
 	// współczynniki ks =[ksr,ksg,ksb] dla światła odbitego
 
 	GLfloat mat_shininess = { 20.0 };
 	// współczynnik n opisujący połysk powierzchni
 
-	GLfloat mat_emission[] = { 0.4, 0.4, 0.4, 1.0 };
+	//GLfloat mat_emission[] = { 0.4, 0.4, 0.4, 1.0 };
 
 /*************************************************************************************/
 // Definicja stałych odpowiadających za osłabienie światła dla obu źródeł
@@ -263,11 +295,11 @@ void myInit() {
 	// składowa stała ds dla modelu zmian oświetlenia w funkcji
 	// odległości od źródła
 
-	GLfloat att_linear = { 0.05 };
+	GLfloat att_linear = { 0.0000005 };
 	// składowa liniowa dl dla modelu zmian oświetlenia w funkcji
 	// odległości od źródła
 
-	GLfloat att_quadratic = { 0.001 };
+	GLfloat att_quadratic = { 0.000000000001 };
 	// składowa kwadratowa dq dla modelu zmian oświetlenia w funkcji
 	// odległości od źródła
 
@@ -276,17 +308,17 @@ void myInit() {
 
 	GLfloat lightPosition[] = { 0.0, 0.0, 0.0 };
 
-	GLfloat light_ambient[] = { 0.1, 0.1, 0.05, 1.0 };
+	GLfloat light_ambient[] = { 0.1, 0.1, 0.1, 0.1 };
 	// składowe intensywności świecenia źródła światła otoczenia
 	// Ia = [Iar,Iag,Iab]
 
 	//GLfloat light_emission[] = { 1.0, 1.0, 0.8, 1.0 };
 
-	GLfloat light_diffuse[] = { 1.0, 1.0, 0.8, 1.0 };
+	GLfloat light_diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
 	// składowe intensywności świecenia źródła światła powodującego
 	// odbicie dyfuzyjne Id = [Idr,Idg,Idb]
 
-	GLfloat light_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+	GLfloat light_specular[] = { 0.85, 0.85, 0.85, 0.85 };
 	// składowe intensywności świecenia źródła światła powodującego
 	// odbicie kierunkowe Is = [Isr,Isg,Isb]
 
@@ -298,7 +330,7 @@ void myInit() {
 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
 	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, mat_shininess);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, mat_emission);
+	//glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, mat_emission);
 
 
 	/*************************************************************************************/
