@@ -9,7 +9,7 @@
 //  AUTOR:				Karol Pastewski, 252798@student.edu.pl
 //
 //  DATA
-//	MODYFIKACJI:        24.01.2021r.
+//	MODYFIKACJI:        25.01.2021r.
 //
 //  PLATFORMA:			System operacyjny:  Microsoft Windows 11
 //						Środowisko:         Microsoft Visual 2022
@@ -56,6 +56,7 @@ double day = 0;
 
 int distanceFromCenter[] = { 57'900, 108'200, 149'600, 227'900, 778'600, 1'433'500, 2'872'500, 4'498'100 };
 double radius[] = { 2'439.5, 6'052.0, 6'378.0, 3'396.0, 71'492.0, 60'268.0, 25'559.0, 24'794.0, 34'825.0 };
+double rings[] = { 102'000, 102'300, 102'600, 103'000, 103'800, 104'000, 110'000, 115'000, 119'000, 125'000, 132'000, 136'000, 141'000, 146'000, 149'000, 155'000, 156'000, 158'000, 160'000, 165'000 };
 int daysInYear[] = { 88, 224, 365, 686, 4'333, 10'756, 30'707, 60'223 };
 
 Planet sun(radius[8], "Tekstury\\sun.tga");
@@ -69,8 +70,6 @@ Planet planets[] = {
 	Planet(radius[6], "Tekstury\\uranus.tga", distanceFromCenter[6], daysInYear[6]),
 	Planet(radius[7], "Tekstury\\neptune.tga", distanceFromCenter[7], daysInYear[7])
 };
-
-int segments = 1000;
 
 void zoom(bool zoomed) {
 	float x = 200 * (lookAtPoint[0] - viewer[0]);
@@ -105,10 +104,35 @@ void drawOrbit(Planet planet) {
 	glColor3f(1.0, 1.0, 1.0);
 }
 
+void drawRings() {
+	GLfloat mat_emission[] = { 0.4, 0.4, 0.4, 1.0 };
+	GLfloat mat_emission_zero[] = { 0.0, 0.0, 0.0, 0.0 };
+	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, mat_emission);
+	glDisable(GL_TEXTURE_2D);
+	for (double ring : rings) {
+		glColor3f(239, 195, 130);
+
+		glBegin(GL_LINE_LOOP);
+		for (int i = 0; i < 3600; i++) {
+			float angle = 1.0 * float(i) / float(3600);
+			float x = ring * cos(2 * M_PI * angle);
+			float z = ring * sin(2 * M_PI * angle);
+
+			glVertex3f(x, 0, z);
+		}
+		glEnd();
+	}
+	glEnable(GL_TEXTURE_2D);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, mat_emission_zero);
+}
+
 void solarSystem() {
 	GLfloat mat_emission[] = { 0.4, 0.4, 0.4, 1.0 };
 	GLfloat mat_emission_zero[] = { 0.0, 0.0, 0.0, 0.0 };
 	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, mat_emission);
+
+
+
 	sun.showTexture();
 	GLUquadricObj* quadricObj = gluNewQuadric();
 	gluQuadricDrawStyle(quadricObj, GLU_FILL);
@@ -118,18 +142,28 @@ void solarSystem() {
 
 
 	for (Planet planet : planets) {
+
 		glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, mat_emission);
 		drawOrbit(planet);
 		glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, mat_emission_zero);
 		planet.setAngle(day);
 		planet.setX();
 		planet.setZ();
+
 		glTranslatef(planet.getX(), 0, planet.getZ());
+		if (planet.getRadius() == 60'268.0) {
+			drawRings();
+		}
+
 		planet.showTexture();
 		gluQuadricDrawStyle(quadricObj, GLU_FILL);
 		gluQuadricNormals(quadricObj, GLU_SMOOTH);
 		gluQuadricTexture(quadricObj, GL_TRUE);
+		glRotatef(90, 1, 0, 0);
+		glRotatef(180, 0, 1, 0);
 		gluSphere(quadricObj, planet.getRadius(), 20, 20);
+		glRotatef(-180, 0, 1, 0);
+		glRotatef(-90, 1, 0, 0);
 		glTranslatef(-planet.getX(), 0, -planet.getZ());
 	}
 }
@@ -145,7 +179,7 @@ void renderScene() {
 		if (delta_y != 0) {
 			zoom(delta_y > 0);
 		}
-	}else if (status == 1) {
+	} else if (status == 1) {
 		azymuth += delta_x * pix2angle * 0.01;
 		elevation -= delta_y * pix2angle * 0.01;
 		if (sin(elevation) >= 0.99) {
@@ -178,6 +212,9 @@ void changeDay() {
 // Funkcja wyświetlająca w konsoli informacje o opcjach programu
 void initProgram() {
 	std::cout << "Program z laboratorium 7 - projekt ukladu slonecznego\n";
+	std::cout << "\tSterowanie myszka:\n";
+	std::cout << "\t\t'Przytrzymaj LPM' - obracanie kamery\n";
+	std::cout << "\t\t'Przytrzymaj PPM' - poruszanie się do przodu lub do tylu\n";
 
 }
 
@@ -353,7 +390,7 @@ void myInit() {
 	glEnable(GL_LIGHT0);     // włączenie źródła o numerze 0
 	glEnable(GL_DEPTH_TEST); // włączenie mechanizmu z-bufora
 
-	
+
 
 	//          --<<TEKSTUROWANIE>>--
 
